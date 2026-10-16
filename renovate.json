@@ -1,0 +1,15 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended", "helpers:pinGitHubActionDigests"],
+  "commitMessagePrefix": "AUTO:",
+  "semanticCommits": "disabled",
+  "minimumReleaseAge": "3 days",
+  "customManagers": [
+    {
+      "description": "Bitwarden CLI version (# renovate: comment). BW_SHA256 must be bumped by hand in the same PR; the build fails until it is.",
+      "customType": "regex",
+      "managerFilePatterns": ["/^Dockerfile$/"],
+      "matchStrings": ["# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+) extractVersion=(?<extractVersion>\\S+)\\nARG BW_VERSION=(?<currentValue>\\S+)"]
+    }
+  ]
+}
