@@ -5,6 +5,9 @@ set -euo pipefail
 
 : "${BW_HOST:?}" "${BW_CLIENTID:?}" "${BW_CLIENTSECRET:?}" "${BW_PASSWORD:?}"
 
+# A container restart keeps the pod's data volume, still logged in; `bw config server`
+# then fails ("Logout required before server config update") and the pod crash-loops.
+bw logout >/dev/null 2>&1 || true
 bw config server "$BW_HOST"
 bw login --apikey --raw >/dev/null
 BW_SESSION=$(bw unlock --passwordenv BW_PASSWORD --raw)
