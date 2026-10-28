@@ -10,7 +10,8 @@ ghcr.io/webend-uk/bitwarden-cli:<bw version>
 
 - Bitwarden's official `bw-oss-linux` zip from [bitwarden/clients releases](https://github.com/bitwarden/clients/releases), checked against a sha256 pinned in the [Dockerfile](Dockerfile).
 - Base `debian:trixie-slim`, pinned by digest. Runs as UID 1000. Works with a read-only root filesystem if `/home/bw/data` and `/tmp` are writable.
-- Built and pushed by [GitHub Actions](.github/workflows/build.yaml) on every commit to `main`. Tags: the `bw` version, and `sha-<commit>`.
+- Built by [GitHub Actions](.github/workflows/build.yaml) on every pull request and commit to `main`, then smoke-tested without a vault (`bw --version` on a read-only root, runs as UID 1000, entrypoint checks its variables). Only `main` pushes. Tags: the `bw` version, and `sha-<commit>`.
+- Changes to `main` go through a pull request that passes that build.
 
 ## Environment
 

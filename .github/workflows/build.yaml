@@ -1,4 +1,4 @@
-# Pull requests: build only (a wrong BW_SHA256 fails here). main: build and push
+# Pull requests: build + smoke test (a wrong BW_SHA256 fails the build). main: also push
 # ghcr.io/webend-uk/bitwarden-cli:<bw version> and :sha-<commit>.
 name: build
 
@@ -27,10 +27,35 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+      - name: Build for the smoke test
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
           platforms: linux/amd64
-          push: ${{ github.event_name != 'pull_request' }}
+          load: true
+          tags: bitwarden-cli:smoke
+      # No vault here: checks the binary, the user and the entrypoint, not a login.
+      - name: Smoke test
+        env:
+          BW: ${{ steps.version.outputs.bw }}
+        run: |
+          set -euo pipefail
+          got=$(docker run --rm --read-only --tmpfs /tmp --tmpfs /home/bw/data:uid=1000,gid=1000 \
+            --entrypoint bw bitwarden-cli:smoke --version)
+          echo "bw --version: $got"
+          test "$got" = "$BW"
+          test "$(docker run --rm --entrypoint id bitwarden-cli:smoke -u)" = 1000
+          # Without BW_* the entrypoint must start and stop at its own check.
+          if out=$(docker run --rm bitwarden-cli:smoke 2>&1); then
+            echo "entrypoint ran without BW_HOST"; exit 1
+          fi
+          echo "$out"
+          grep -q 'BW_HOST' <<<"$out"
+      - name: Push
+        if: github.event_name != 'pull_request'
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          platforms: linux/amd64
+          push: true
           tags: |
             ghcr.io/webend-uk/bitwarden-cli:${{ steps.version.outputs.bw }}
             ghcr.io/webend-uk/bitwarden-cli:sha-${{ github.sha }}
