@@ -4,6 +4,23 @@
   "commitMessagePrefix": "AUTO:",
   "semanticCommits": "disabled",
   "minimumReleaseAge": "3 days",
+  "packageRules": [
+    {
+      "description": "Every merge rebuilds the image",
+      "matchPackageNames": ["*"],
+      "prBodyNotes": [
+        "**Order:** merging rebuilds the image and changes its digest; merge all open updates here before rolling a new digest out."
+      ]
+    },
+    {
+      "description": "Bitwarden CLI: BW_SHA256 by hand",
+      "matchDepNames": ["bitwarden/clients"],
+      "addLabels": ["manual-step"],
+      "prBodyNotes": [
+        "**Manual:** update `BW_SHA256` in this PR (command in the Dockerfile); the build fails until it matches."
+      ]
+    }
+  ],
   "customManagers": [
     {
       "description": "Bitwarden CLI version (# renovate: comment). BW_SHA256 must be bumped by hand in the same PR; the build fails until it is.",
